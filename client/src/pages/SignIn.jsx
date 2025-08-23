@@ -6,6 +6,7 @@ import {
   signInFailure,
   signInSuccess,
 } from "../redux/user/userSlice";
+import Oath from "../components/Oath";
 const SignIn = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -72,16 +73,41 @@ const SignIn = () => {
         </div>
         <button
           type="submit"
-          className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:bg-blue-600"
+          disabled={loading}
+          className={`w-full flex items-center justify-center gap-2 py-2 px-4 rounded-md transition duration-200
+    ${
+      loading
+        ? "bg-blue-400 cursor-not-allowed"
+        : "bg-blue-600 hover:bg-blue-700 cursor-pointer"
+    }
+    text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1`}
         >
+          {loading && (
+            <svg
+              className="animate-spin h-5 w-5 text-white"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 100 16v-4l-3 3 3 3v-4a8 8 0 01-8-8z"
+              ></path>
+            </svg>
+          )}
           {loading ? "Signing in..." : "Sign In"}
         </button>
-        <button
-          type="button"
-          className="w-full bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 focus:outline-none focus:bg-red-600 mt-2"
-        >
-          Continue with Google
-        </button>
+        {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+        <Oath />
         <p className="mt-4 text-sm text-gray-600">
           Don't have an account?
           <Link to="/sign-up" className="text-blue-500 hover:underline">

@@ -80,18 +80,54 @@ const SignUp = () => {
           />
         </div>
         <button
-          disabled={loading}
           type="submit"
-          className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:bg-blue-600"
+          disabled={loading}
+          className={`w-full flex items-center justify-center gap-2 py-2 px-4 rounded-md transition duration-200
+    ${
+      loading
+        ? "bg-blue-400 cursor-not-allowed"
+        : "bg-blue-600 hover:bg-blue-700 cursor-pointer"
+    }
+    text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1`}
         >
+          {loading && (
+            <svg
+              className="animate-spin h-5 w-5 text-white"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 100 16v-4l-3 3 3 3v-4a8 8 0 01-8-8z"
+              ></path>
+            </svg>
+          )}
           {loading ? "Signing Up..." : "Sign Up"}
         </button>
+        {error && <p className="text-red-500 mt-2">{error}</p>}
         <button
+          onClick={handleGoogleSignIn}
           type="button"
-          className="w-full bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 focus:outline-none focus:bg-red-600 mt-2"
+          className="w-full flex items-center justify-center border border-gray-300 rounded-md px-4 py-2 bg-white text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 mt-2"
         >
+          <img
+            src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+            alt="Google logo"
+            className="w-5 h-5 mr-3"
+          />
           Continue with Google
         </button>
+
         <p className="mt-4 text-sm text-gray-600">
           Already have an account?{" "}
           <Link to="/sign-in" className="text-blue-500 hover:underline">
