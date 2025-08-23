@@ -44,3 +44,40 @@ export const signIn = async (req, res, next) => {
   }
   next();
 };
+
+export const googleSignIn = async (req, res, next) => {
+  const { userName, email, img } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (user) {
+      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+        expiresIn: "7d",
+      });
+      // remove password
+      user.password = undefined;
+      res
+        .cookie("access_token", token, {
+          httpOnly: true,
+        })
+        .status(200)
+        .json({ user, message: "Login successful" });
+    } else {
+      user = new User({ userName, email, img });
+      await user.save();
+      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+        expiresIn: "7d",
+      });
+      res
+        .cookie("access_token", token, {
+          httpOnly: true,
+        })
+        .status(200)
+        .json({ user, message: "Login successful" });
+    }
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: "Google Sign-In failed", message: error.message });
+    next();
+  }
+};
