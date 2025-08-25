@@ -46,9 +46,8 @@ export const signIn = async (req, res, next) => {
 };
 
 export const googleSignIn = async (req, res, next) => {
-  const { userName, email, img } = req.body;
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: req.body.email });
     if (user) {
       const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
         expiresIn: "7d",
@@ -62,9 +61,19 @@ export const googleSignIn = async (req, res, next) => {
         .status(200)
         .json({ user, message: "Login successful" });
     } else {
-      user = new User({ userName, email, img });
-      await user.save();
-      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      const generatedPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).toUpperCase().slice(-8);
+      const hashedPassword = bcryptjs.hashSync(generatedPassword, 10);
+      const userGeneratedName = userName.split(" ").join("").toLowerCase() + Math.random().toString(36).slice(-4);
+      newUser = new User({
+        userGeneratedName,
+        email: req.body.email,
+        password: hashedPassword,
+        img: req.body.img,
+      });
+      await newUser.save();
+      // remove password
+      newUser.password = undefined;
+      const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
         expiresIn: "7d",
       });
       res

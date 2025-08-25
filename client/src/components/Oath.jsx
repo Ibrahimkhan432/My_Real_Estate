@@ -3,7 +3,9 @@ import { app } from "../../firebase";
 import { signInWithPopup } from "firebase/auth";
 import { useDispatch } from "react-redux";
 import { signInSuccess } from "../redux/user/userSlice";
+import useNavigate from "react-router-dom";
 const Oath = () => {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const handleGoogleSignIn = async () => {
     try {
@@ -25,6 +27,7 @@ const Oath = () => {
 
       const data = await res.json();
       dispatch(signInSuccess(data));
+      navigate("/");
       console.log(data);
     } catch (error) {
       console.error("Google Sign-In Error:", error);
