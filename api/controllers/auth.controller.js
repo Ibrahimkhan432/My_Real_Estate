@@ -47,28 +47,30 @@ export const signIn = async (req, res, next) => {
 
 export const googleSignIn = async (req, res, next) => {
   try {
-    const user = await User.findOne({ email: req.body.email });
-    if (user) {
-      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+    const {user} = req.body;
+    const existingUser = await User.findOne({ email: user.email });
+    if (existingUser) {
+      console.log("User already exists");
+      const token = jwt.sign({ id: existingUser._id }, process.env.JWT_SECRET, {
         expiresIn: "7d",
       });
       // remove password
-      user.password = undefined;
+      existingUser.password = undefined;
       res
         .cookie("access_token", token, {
           httpOnly: true,
         })
         .status(200)
-        .json({ user, message: "Login successful" });
+        .json({ user: existingUser, message: "Login successful" });
     } else {
+      console.log("Creating new user");
       const generatedPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).toUpperCase().slice(-8);
       const hashedPassword = bcryptjs.hashSync(generatedPassword, 10);
-      const userGeneratedName = userName.split(" ").join("").toLowerCase() + Math.random().toString(36).slice(-4);
-      newUser = new User({
-        userGeneratedName,
-        email: req.body.email,
+      const newUser = new User({
+        userName: user.userName.split(" ").join("").toLowerCase() + Math.random().toString(36).slice(-4),
+        email: user.email,
         password: hashedPassword,
-        img: req.body.img,
+        img: user.img,
       });
       await newUser.save();
       // remove password
@@ -84,6 +86,7 @@ export const googleSignIn = async (req, res, next) => {
         .json({ user, message: "Login successful" });
     }
   } catch (error) {
+    console.error("Google Sign-In Error:", error);
     res
       .status(500)
       .json({ error: "Google Sign-In failed", message: error.message });

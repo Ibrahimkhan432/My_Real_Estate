@@ -1,9 +1,57 @@
 import React from 'react'
-
+import { useSelector } from 'react-redux'
+import { selectUser } from '../redux/user/userSlice'
 const Profile = () => {
+  const currentUser = useSelector(selectUser)
   return (
     <div>
-      Profile
+      <h1 className='text-3xl font-bold text-slate-500 text-center '>Profile</h1>
+      <form className='max-w-md mx-auto mt-8 p-4 border border-gray-300 rounded-lg shadow-md'>
+        <img src={currentUser?.img ?
+          currentUser.img
+          : 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png?20150327203541'
+        } alt="Profile" className='w-32 h-32 rounded-full mx-auto mb-4' />
+        <div className='mb-4'>
+          <label className='block text-gray-700 text-sm font-bold mb-2' htmlFor='username'>
+            Username
+          </label>
+          <input
+            className='shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline'
+            id='username'
+            type='text'
+            placeholder='Enter your username'
+          />
+        </div>
+        <div className='mb-4'>
+          <label className='block text-gray-700 text-sm font-bold mb-2' htmlFor='email'>
+            Email
+          </label>
+          <input
+            className='shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline'
+            id='email'
+            type='email'
+            placeholder='Enter your email'
+          />
+        </div>
+        <div className='mb-4'>
+          <label className='block text-gray-700 text-sm font-bold mb-2' htmlFor='password'>
+            Password
+          </label>
+          <input
+            className='shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline'
+            id='password'
+            type='password'
+            placeholder='Enter your password'
+          />
+        </div>
+        <div className='mb-4'>
+          <button className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 rounded w-full cursor-pointer'>Update</button>
+        </div>
+        <div className='flex justify-between items-center'>
+          <span className=' text-red-600 cursor-pointer'>Delete Account</span>
+          <span className=' text-red-600 cursor-pointer ml-4'>Signout</span>
+        </div>
+      </form>
     </div>
   )
 }

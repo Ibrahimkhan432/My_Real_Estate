@@ -2,8 +2,10 @@ import React from 'react'
 import { FaSearch } from 'react-icons/fa'
 import { Link } from 'react-router-dom'
 import { useSelector } from 'react-redux'
+import { selectUser } from '../redux/user/userSlice'
 const Header = () => {
-    const { currentUser } = useSelector((state) => state.user);
+    const currentUser = useSelector(selectUser);
+    console.log("Current User in Header:", currentUser);
     return (
         <header className='bg-slate-200 shadow-md'>
             <div className='flex justify-between items-center max-w-6xl mx-auto '>
@@ -29,7 +31,6 @@ const Header = () => {
                             <Link to='/profile'>
                                 <img src={currentUser.img} alt="profile" className='w-8 h-8 rounded-full object-cover' />
                             </Link>
-
                         ) : (
                             <Link to='/sign-up'>
                                 <li className='hidden sm:inline text-slate-500 font-semibold hover:underline cursor-pointer'>Sign In</li>
