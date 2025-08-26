@@ -1,16 +1,53 @@
-import React from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { selectUser } from '../redux/user/userSlice'
+import { getStorage } from "firebase/storage";
+import { app } from '../../firebase';
+
 const Profile = () => {
   const currentUser = useSelector(selectUser)
+
+  const fileRef = useRef();
+  const [file, setFile] = useState(undefined);
+  console.log(file);
+
+
+  useEffect(() => {
+    if (file) {
+      handleFileUpload();
+    }
+  }, [file])
+
+  const handleFileUpload = (file) => {
+    const storage = getStorage(app);
+    const fileName = new Date().getTime() + file.name;
+    const storageRef = ref(storage, fileName);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+    uploadTask.on('state_changed',
+      (snapshot) => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        console.log('Upload is ' + progress + '% done');
+      }
+    );
+  }
+
   return (
     <div>
       <h1 className='text-3xl font-bold text-slate-500 text-center '>Profile</h1>
       <form className='max-w-md mx-auto mt-8 p-4 border border-gray-300 rounded-lg shadow-md'>
-        <img src={currentUser?.img ?
-          currentUser.img
-          : 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png?20150327203541'
-        } alt="Profile" className='w-32 h-32 rounded-full mx-auto mb-4' />
+        <input
+          onChange={(e) => setFile(e.target.files[0])}
+          ref={fileRef}
+          accept='image/*'
+          type="file"
+          className='hidden' />
+        <img
+          onChange={handleFileUpload}
+          onClick={() => fileRef.current.click()}
+          src={currentUser?.img ?
+            currentUser.img
+            : 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png?20150327203541'
+          } alt="Profile" className='w-32 h-32 rounded-full mx-auto mb-4 cursor-pointer' />
         <div className='mb-4'>
           <label className='block text-gray-700 text-sm font-bold mb-2' htmlFor='username'>
             Username
