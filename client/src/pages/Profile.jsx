@@ -3,12 +3,16 @@ import { useSelector } from 'react-redux'
 import { selectUser } from '../redux/user/userSlice'
 import { getStorage } from "firebase/storage";
 import { app } from '../../firebase';
+import { set } from 'mongoose';
 
 const Profile = () => {
   const currentUser = useSelector(selectUser)
 
   const fileRef = useRef();
   const [file, setFile] = useState(undefined);
+  const [filePerc, setFilePerc] = useState(0);
+  const [fileUploadErrror, setFileUploadErrror] = useState(null);
+  const [formData, setFormData] = useState({});
   console.log(file);
 
 
@@ -26,8 +30,17 @@ const Profile = () => {
     uploadTask.on('state_changed',
       (snapshot) => {
         const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        setFilePerc(Math.round(progress));
         console.log('Upload is ' + progress + '% done');
-      }
+      },
+      (error) => {
+        setFileUploadErrror(error);
+      },
+      () => {
+        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+          setFormData(({ ...formData, img: downloadURL }));
+        });
+      },
     );
   }
 
@@ -48,6 +61,19 @@ const Profile = () => {
             currentUser.img
             : 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png?20150327203541'
           } alt="Profile" className='w-32 h-32 rounded-full mx-auto mb-4 cursor-pointer' />
+        <p>
+          {
+            fileUploadErrror ? (
+              <span className='text-red-500'>File upload error:(image must be less than 2MB)</span>
+            ) : (
+              filePerc > 0 && filePerc < 100 ? (<span className='text-green-500'>Uploading: {filePerc}%</span>
+              ) : filePerc === 100 ? (
+                <span className='text-green-500'>Upload complete!</span>
+              ) : (
+                ''
+              ))
+          }
+        </p>
         <div className='mb-4'>
           <label className='block text-gray-700 text-sm font-bold mb-2' htmlFor='username'>
             Username
