@@ -2,6 +2,7 @@ import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import authRouter from "./routes/auth.router.js";
+import cookieParser from "cookie-parser";
 dotenv.config();
 
 mongoose
@@ -15,6 +16,8 @@ mongoose
 
 const app = express();
 app.use(express.json());
+
+app.use(cookieParser());
 
 app.get("/", (req, res) => {
   res.send("hello world");
