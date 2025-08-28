@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import { selectUser } from '../redux/user/userSlice'
 const Header = () => {
-    const currentUser = useSelector(selectUser);
+    const {currentUser} = useSelector(selectUser);
     console.log("Current User in Header:", currentUser);
     return (
         <header className='bg-slate-200 shadow-md'>

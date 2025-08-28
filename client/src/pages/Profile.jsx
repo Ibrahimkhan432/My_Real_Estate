@@ -1,20 +1,18 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
-import { selectUser } from '../redux/user/userSlice'
 import { getStorage } from "firebase/storage";
 import { app } from '../../firebase';
-import { set } from 'mongoose';
-
+import { updateUserStart, updateUserSuccess, updateUserFailure } from '../redux/user/userSlice';
+import { useDispatch } from 'react-redux';
 const Profile = () => {
-  const currentUser = useSelector(selectUser)
-
+  const { currentUser, loading, error } = useSelector((state) => state.user)
   const fileRef = useRef();
   const [file, setFile] = useState(undefined);
   const [filePerc, setFilePerc] = useState(0);
   const [fileUploadErrror, setFileUploadErrror] = useState(null);
   const [formData, setFormData] = useState({});
-  console.log(file);
-
+  console.log(formData);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     if (file) {
@@ -44,10 +42,42 @@ const Profile = () => {
     );
   }
 
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.id]: e.target.value });
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      dispatch(updateUserStart());
+      const res = await fetch(`/api/user/update/${currentUser._id}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+      console.log(data);
+      if (data.success === false) {
+        dispatch(updateUserFailure(data.message));
+        console.error("Update failed:", data.message);
+        return;
+      }
+      dispatch(updateUserSuccess(data));
+      console.log("Update successful:", data);
+
+    } catch (error) {
+      dispatch(updateUserFailure(error.message));
+    }
+  }
+
   return (
     <div>
       <h1 className='text-3xl font-bold text-slate-500 text-center '>Profile</h1>
-      <form className='max-w-md mx-auto mt-8 p-4 border border-gray-300 rounded-lg shadow-md'>
+      <form
+        onSubmit={handleSubmit}
+        className='max-w-md mx-auto mt-8 p-4 border border-gray-300 rounded-lg shadow-md'>
         <input
           onChange={(e) => setFile(e.target.files[0])}
           ref={fileRef}
@@ -83,6 +113,8 @@ const Profile = () => {
             id='username'
             type='text'
             placeholder='Enter your username'
+            defaultValue={currentUser.userName}
+            onChange={handleChange}
           />
         </div>
         <div className='mb-4'>
@@ -94,6 +126,8 @@ const Profile = () => {
             id='email'
             type='email'
             placeholder='Enter your email'
+            defaultValue={currentUser.email}
+            onChange={handleChange}
           />
         </div>
         <div className='mb-4'>
@@ -108,13 +142,17 @@ const Profile = () => {
           />
         </div>
         <div className='mb-4'>
-          <button className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 rounded w-full cursor-pointer'>Update</button>
-        </div>
-        <div className='flex justify-between items-center'>
-          <span className=' text-red-600 cursor-pointer'>Delete Account</span>
-          <span className=' text-red-600 cursor-pointer ml-4'>Signout</span>
+          <button
+            disabled={loading}
+            className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 rounded w-full cursor-pointer'>
+            {loading ? 'Updating...' : 'Update'}
+          </button>
         </div>
       </form>
+      <div className='flex justify-between items-center'>
+        <span className=' text-red-600 cursor-pointer'>Delete Account</span>
+        <span className=' text-red-600 cursor-pointer ml-4'>Signout</span>
+      </div>
     </div>
   )
 }
