@@ -2,10 +2,11 @@ import React, { useEffect, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { getStorage } from "firebase/storage";
 import { app } from '../../firebase';
-import { updateUserStart, updateUserSuccess, updateUserFailure } from '../redux/user/userSlice';
+import { updateUserStart, updateUserSuccess, updateUserFailure, deleteUserFailure, deleteUserStart, deleteUserSuccess } from '../redux/user/userSlice';
 import { useDispatch } from 'react-redux';
 const Profile = () => {
   const { currentUser, loading, error } = useSelector((state) => state.user)
+  console.log(currentUser);
   const fileRef = useRef();
   const [file, setFile] = useState(undefined);
   const [filePerc, setFilePerc] = useState(0);
@@ -46,6 +47,7 @@ const Profile = () => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   }
 
+  // handle user submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -71,6 +73,34 @@ const Profile = () => {
       dispatch(updateUserFailure(error.message));
     }
   }
+
+  // handle user delete
+  const handleDeleteAccount = async (e) => {
+    try {
+      dispatch(deleteUserStart());
+      const res = await fetch(`/api/user/delete/${currentUser._id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await res.json();
+      console.log(data);
+      if (data.success === false) {
+        dispatch(deleteUserFailure(data.message));
+        console.error("Delete failed:", data.message);
+        return;
+      }
+      dispatch(deleteUserSuccess(data));
+      console.log("Delete successful:", data);
+      navigate("/sign-in", {
+        replace: true
+      })
+    } catch (error) {
+      dispatch(deleteUserFailure(error.message));
+    }
+  }
+
 
   return (
     <div>
@@ -113,7 +143,7 @@ const Profile = () => {
             id='username'
             type='text'
             placeholder='Enter your username'
-            defaultValue={currentUser.userName}
+            defaultValue={currentUser?.userName}
             onChange={handleChange}
           />
         </div>
@@ -126,7 +156,7 @@ const Profile = () => {
             id='email'
             type='email'
             placeholder='Enter your email'
-            defaultValue={currentUser.email}
+            defaultValue={currentUser?.email}
             onChange={handleChange}
           />
         </div>
@@ -150,7 +180,9 @@ const Profile = () => {
         </div>
       </form>
       <div className='flex justify-between items-center'>
-        <span className=' text-red-600 cursor-pointer'>Delete Account</span>
+        <span
+          onClick={handleDeleteAccount}
+          className=' text-red-600 cursor-pointer'>Delete Account</span>
         <span className=' text-red-600 cursor-pointer ml-4'>Signout</span>
       </div>
     </div>

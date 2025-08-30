@@ -39,4 +39,18 @@ export const deleteUser = async (req, res, next) => {
     }
 }
 
+export const getUserListings = async (req, res, next) => {
+    if (req.params.id === req.params.id) {
+        try {
+            const listnings = await Listning.find({ useRef: req.params.id });
+            res.status(200).json(listnings);
+        } catch (error) {
+            next(error);
+        }
+    }
+    else {
+        return next(errorHandler(403, "You can get only your listnings!"));
+    }
+}
+
 

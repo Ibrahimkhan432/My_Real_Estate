@@ -32,13 +32,13 @@ export const signIn = async (req, res, next) => {
       expiresIn: "7d",
     });
     // Remove password from the user object before sending response
-    validUser.password = undefined;
+    const { password: pass, ...rest } = validUser._doc;
     res
       .cookie("access_token", token, {
         httpOnly: true,
       })
       .status(200)
-      .json({ validUser, message: "Login successful" });
+      .json(rest);
   } catch (error) {
     res.status(500).json({ error: "Login failed", message: error.message });
   }
@@ -47,7 +47,7 @@ export const signIn = async (req, res, next) => {
 
 export const googleSignIn = async (req, res, next) => {
   try {
-    const {user} = req.body;
+    const { user } = req.body;
     const existingUser = await User.findOne({ email: user.email });
     if (existingUser) {
       console.log("User already exists");
