@@ -116,7 +116,6 @@ const SignUp = () => {
         </button>
         {error && <p className="text-red-500 mt-2">{error}</p>}
         <button
-          onClick={handleGoogleSignIn}
           type="button"
           className="w-full flex items-center justify-center border border-gray-300 rounded-md px-4 py-2 bg-white text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 mt-2"
         >
