@@ -4,6 +4,7 @@ import { getStorage } from "firebase/storage";
 import { app } from '../../firebase';
 import { updateUserStart, updateUserSuccess, updateUserFailure, deleteUserFailure, deleteUserStart, deleteUserSuccess, signInFailure, signOutUserStart, signOutUserSuccess } from '../redux/user/userSlice';
 import { useDispatch } from 'react-redux';
+import { Link } from 'react-router-dom';
 const Profile = () => {
   const { currentUser, loading, error } = useSelector((state) => state.user)
   const fileRef = useRef();
@@ -193,11 +194,13 @@ const Profile = () => {
           </button>
         </div>
         <div className='mb-4'>
-          <button
-            disabled={loading}
-            className='bg-green-700 hover:bg-green-800 text-white font-bold py-2 rounded w-full cursor-pointer'>
-            {loading ? 'Creating Listing...' : 'Create Listing'}
-          </button>
+          <Link to='/create-listing'>
+            <button
+              disabled={loading}
+              className='bg-green-700 hover:bg-green-800 text-white font-bold py-2 rounded w-full cursor-pointer'>
+              {loading ? 'Creating Listing...' : 'Create Listing'}
+            </button>
+          </Link>
         </div>
       </form>
       <div className='flex justify-between items-center'>
