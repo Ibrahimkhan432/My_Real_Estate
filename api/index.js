@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import authRouter from "./routes/auth.router.js";
 import userRouter from "./routes/user.router.js";
 import cookieParser from "cookie-parser";
+import listingRouter from "./routes/listing.route.js";
 dotenv.config();
 
 mongoose
@@ -26,6 +27,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter);
+app.use("/api/listing", listingRouter);
 
 app.listen(3000, () => {
   console.log("server is living on port 3000!");

@@ -192,6 +192,13 @@ const Profile = () => {
             {loading ? 'Updating...' : 'Update'}
           </button>
         </div>
+        <div className='mb-4'>
+          <button
+            disabled={loading}
+            className='bg-green-700 hover:bg-green-800 text-white font-bold py-2 rounded w-full cursor-pointer'>
+            {loading ? 'Creating Listing...' : 'Create Listing'}
+          </button>
+        </div>
       </form>
       <div className='flex justify-between items-center'>
         <span
