@@ -1,7 +1,10 @@
 import React, { useState } from "react";
-// import axios from "axios";
+import getStorage from "firebase/storage";
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { app } from "../../firebase";
 
 export default function CreateListing() {
+    const [files, setFiles] = useState([]);
     const [formData, setFormData] = useState({
         name: "",
         description: "",
@@ -14,9 +17,67 @@ export default function CreateListing() {
         parking: false,
         type: "apartment",
         offer: false,
-        imageUrls: [""],
+        imageUrls: [],
         useRef: ""
     });
+    console.log(formData);
+
+    const [imageUploadError, setImageUploadError] = useState(false);
+    const [uploading, setUploading] = useState(false);
+
+    const handleImageSubmit = (e) => {
+        if (files.length > 0 && files.length < 7) {
+            const promises = [];
+            for (i = 0; i < files.length + formData.imageUrls.length; i++) {
+                promises.push(
+                    storeImage(files[i])
+                )
+            }
+            Promise.all(promises)
+                .then((urls) => {
+                    setFormData({ ...formData, imageUrls: formData.imageUrls.concat(urls) });
+                    setImageUploadError(true);
+                })
+                .catch((err) => {
+                    setImageUploadError('Image upload failed (2 mb max per image)');
+                    setUploading(false);
+                });
+
+        } else {
+            setImageUploadError('You can only upload 6 images per listing');
+            setUploading(false);
+        }
+    };
+    const storeImage = (file) => {
+        return new Promise((resolve, reject) => {
+            const storage = getStorage(app);
+            const fileName = new Date().getTime() + file.name;
+            const storageRef = ref(storage, fileName);
+            const uploadTask = uploadBytesResumable(storageRef, file);
+            uploadTask.on('state_changed',
+                (snapshot) => {
+                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                    console.log('Upload is ' + progress + '% done');
+                },
+                (error) => {
+                    console.log(error);
+                    reject(error);
+                },
+                () => {
+                    getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+                        resolve(downloadURL);
+                    });
+                }
+            )
+        });
+    }
+
+    const handleDeleteImage = (index) => {
+        setFormData({
+            ...formData,
+            imageUrls: formData.imageUrls.filter((_, i) => i !== index),
+        });
+    };
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -26,34 +87,12 @@ export default function CreateListing() {
         }));
     };
 
-    const handleImageChange = (e, index) => {
-        const newUrls = [...formData.imageUrls];
-        newUrls[index] = e.target.value;
-        setFormData({ ...formData, imageUrls: newUrls });
-    };
-
-    const addImageField = () => {
-        setFormData({ ...formData, imageUrls: [...formData.imageUrls, ""] });
-    };
-
-    // const handleSubmit = async (e) => {
-    //     e.preventDefault();
-    //     try {
-    //         const res = await axios.post("http://localhost:5000/api/listings", formData);
-    //         alert("Listing created successfully!");
-    //         console.log(res.data);
-    //     } catch (error) {
-    //         console.error(error);
-    //         alert("Error creating listing");
-    //     }
-    // };
-
     return (
         <div className="max-w-3xl mx-auto p-6 bg-white shadow-lg rounded-2xl mt-6">
             <h2 className="text-2xl font-bold mb-4">Create New Listing</h2>
             <form className="grid gap-4"
             //  onSubmit={handleSubmit}
-             >
+            >
 
                 <input
                     type="text"
@@ -169,51 +208,55 @@ export default function CreateListing() {
                     Special Offer
                 </label>
 
-               <div>
-  <label className="block mb-2 font-semibold">
-    Upload Images (First image will be cover image) — Max 6
-  </label>
-  
-  <input
-    type="file"
-    accept="image/*"
-    multiple
-    onChange={(e) => {
-      const files = Array.from(e.target.files).slice(0, 6); // limit max 6
-      const urls = files.map((file) => URL.createObjectURL(file)); 
-      setFormData({ ...formData, imageUrls: urls });
-    }}
-    className="border p-2 rounded mb-2 w-full"
-  />
+                <div>
+                    <label className="block mb-2 font-semibold">
+                        Upload Images (First image will be cover image) — Max 6
+                    </label>
 
-  <button
-    type="button"
-    className="bg-green-600 text-white px-4 py-1 rounded hover:bg-green-700 text-sm"
-    onClick={() => alert("Images uploaded successfully!")}
-  >
-    Upload
-  </button>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={(e) => {
+                            const files = Array.from(e.target.files).slice(0, 6); // limit max 6
+                            const urls = files.map((file) => URL.createObjectURL(file));
+                            setFormData({ ...formData, imageUrls: urls });
+                        }}
+                        className="border p-2 rounded mb-2 w-full"
+                    />
 
-  {formData.imageUrls.length > 0 && (
-    <div className="grid grid-cols-3 gap-2 mt-3">
-      {formData.imageUrls.map((img, index) => (
-        <div key={index} className="relative">
-          <img
-            src={img}
-            alt={`Preview ${index + 1}`}
-            className="w-full h-24 object-cover rounded"
-          />
-          {index === 0 && (
-            <span className="absolute top-1 left-1 bg-yellow-500 text-white text-xs px-1 rounded">
-              Cover
-            </span>
-          )}
-        </div>
-      ))}
-    </div>
-  )}
-</div>
+                    <button
+                        type="button"
+                        className="bg-green-600 text-white px-4 py-1 rounded hover:bg-green-700 text-sm"
+                        onClick={handleImageSubmit}
+                    >
+                        {
+                            uploading ? 'Uploading...' : 'Upload'
+                        }
+                    </button>
+                    {formData.imageUrls.length > 0 && (
+                        <div className="grid grid-cols-3 gap-2 mt-3">
+                            {formData.imageUrls.map((url, index) => (
+                                <div key={url} className="relative">
+                                    <img
+                                        src={url}
+                                        alt={`Preview ${index + 1}`}
+                                        className="w-full h-24 object-cover rounded"
+                                    />
+                                    <button
+                                        onClick={() => handleDeleteImage(index)}
+                                        className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded">Delete </button>
+                                    {index === 0 && (
+                                        <span className="absolute top-1 left-1 bg-yellow-500 text-white text-xs px-1 rounded">
+                                            Cover
+                                        </span>
+                                    )}
+                                </div>
 
+                            ))}
+                        </div>
+                    )}
+                </div>
 
                 <input
                     type="text"
