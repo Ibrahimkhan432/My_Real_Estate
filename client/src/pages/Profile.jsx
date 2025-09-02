@@ -138,6 +138,27 @@ const Profile = () => {
     }
   }
 
+  // handle listing delete
+  const handleListingDelete = async (listingId) => {
+    try {
+      const res = await fetch(`/api/listing/delete/${listingId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await res.json();
+      console.log(data);
+      if (data.success === false) {
+        setShowListingError(data.message);
+        return;
+      }
+      handleShowListing();
+    } catch (error) {
+      setShowListingError(error.message);
+    }
+  }
+
   return (
     <div>
       <h1 className='text-3xl font-bold text-slate-500 text-center '>Profile</h1>
