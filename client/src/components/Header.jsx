@@ -5,7 +5,6 @@ import { useSelector } from 'react-redux'
 import { selectUser } from '../redux/user/userSlice'
 const Header = () => {
     const {currentUser} = useSelector(selectUser);
-    console.log("Current User in Header:", currentUser);
     return (
         <header className='bg-slate-200 shadow-md'>
             <div className='flex justify-between items-center max-w-6xl mx-auto '>
