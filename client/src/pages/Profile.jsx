@@ -4,7 +4,8 @@ import { getStorage } from "firebase/storage";
 import { app } from '../../firebase';
 import { updateUserStart, updateUserSuccess, updateUserFailure, deleteUserFailure, deleteUserStart, deleteUserSuccess, signInFailure, signOutUserStart, signOutUserSuccess } from '../redux/user/userSlice';
 import { useDispatch } from 'react-redux';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { set } from 'mongoose';
 const Profile = () => {
   const { currentUser, loading, error } = useSelector((state) => state.user)
   const fileRef = useRef();
@@ -13,6 +14,9 @@ const Profile = () => {
   const [fileUploadErrror, setFileUploadErrror] = useState(null);
   const [formData, setFormData] = useState({});
   console.log(formData);
+  const [showListingError, setShowListingError] = useState(false);
+  const [userListings, setUserListings] = useState([]);
+  const navigate = useNavigate();
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -117,6 +121,23 @@ const Profile = () => {
     }
   }
 
+  // show listing
+  const handleShowListing = async () => {
+    try {
+      setShowListingError(false);
+      const res = await fetch(`/api/user/listings/${currentUser._id}`);
+      console.log("user listing res (126): ", res);
+      const data = await res.json();
+      if (data.success === false) {
+        setShowListingError(true);
+        return;
+      }
+      setUserListings(data);
+    } catch (error) {
+      setShowListingError(error.message);
+    }
+  }
+
   return (
     <div>
       <h1 className='text-3xl font-bold text-slate-500 text-center '>Profile</h1>
@@ -211,6 +232,58 @@ const Profile = () => {
           onClick={handleSignOut}
           className=' text-red-600 cursor-pointer ml-4'>Signout</span>
       </div>
+      <div className='flex justify-center'>
+        <button
+          onClick={handleShowListing}
+          className='cursor-pointer text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2'>Show Listing</button>
+      </div>
+      {userListings && userListings.length > 0 && (
+        <div className="flex flex-col gap-6 mt-10">
+          <h1 className="text-center text-3xl font-bold text-slate-800">
+            Your Listings
+          </h1>
+
+          {userListings.map((listing) => (
+            <div
+              key={listing._id}
+              className="flex items-center justify-between gap-4 border rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow bg-white"
+            >
+              {/* Image */}
+              <Link to={`/listing/${listing._id}`}>
+                <img
+                  src={listing.imageUrls[0]}
+                  alt="listing cover"
+                  className="h-20 w-20 rounded-xl object-cover border"
+                />
+              </Link>
+
+              {/* Title */}
+              <Link
+                className="text-slate-700 font-semibold text-lg hover:text-blue-600 hover:underline truncate flex-1"
+                to={`/listing/${listing._id}`}
+              >
+                {listing.name}
+              </Link>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col items-center gap-2">
+                <button
+                  onClick={() => handleListingDelete(listing._id)}
+                  className="px-3 py-1 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition"
+                >
+                  Delete
+                </button>
+                <Link to={`/update-listing/${listing._id}`}>
+                  <button className="px-3 py-1 text-sm font-medium text-green-600 hover:bg-green-50 rounded-lg transition">
+                    Edit
+                  </button>
+                </Link>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
     </div>
   )
 }
