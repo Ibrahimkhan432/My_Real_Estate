@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from "react";
+"use client";
+
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import ListingItem from "../components/ListingItem";
 
@@ -135,136 +137,243 @@ export default function Search() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row">
-      <div className="p-7  border-b-2 md:border-r-2 md:min-h-screen">
-        <form onSubmit={handleSubmit} className="flex flex-col gap-8">
-          <div className="flex items-center gap-2">
-            <label className="whitespace-nowrap font-semibold">
-              Search Term:
-            </label>
-            <input
-              type="text"
-              id="searchTerm"
-              placeholder="Search..."
-              value={sidebarData.searchTerm}
-              onChange={handleChange}
-              className="border rounded-lg p-3 w-full"
-            />
-          </div>
-          <div className="flex gap-2 flex-wrap items-center">
-            <label className="font-semibold">Type:</label>
-            <div className="flex gap-2">
-              <input
-                type="checkbox"
-                id="all"
-                className="w-5"
-                checked={sidebarData.type === "all"}
-                onChange={handleChange}
-              />
-              <span>Rent & Sale</span>
-            </div>
-            <div className="flex gap-2">
-              <input
-                type="checkbox"
-                id="rent"
-                className="w-5"
-                checked={sidebarData.type === "rent"}
-                onChange={handleChange}
-              />
-              <span>Rent</span>
-            </div>
-            <div className="flex gap-2">
-              <input
-                type="checkbox"
-                id="sale"
-                className="w-5"
-                checked={sidebarData.type === "sale"}
-                onChange={handleChange}
-              />
-              <span>Sale</span>
-            </div>
-            <div className="flex gap-2">
-              <input
-                type="checkbox"
-                id="offer"
-                className="w-5"
-                checked={sidebarData.offer}
-                onChange={handleChange}
-              />
-              <span>Offer</span>
-            </div>
-          </div>
-          <div className="flex gap-2 flex-wrap items-center">
-            <label className="font-semibold">Amenities:</label>
-            <div className="flex gap-2">
-              <input
-                type="checkbox"
-                id="parking"
-                className="w-5"
-                checked={sidebarData.parking}
-                onChange={handleChange}
-              />
-              <span>Parking</span>
-            </div>
-            <div className="flex gap-2">
-              <input
-                type="checkbox"
-                id="furnished"
-                className="w-5"
-                checked={sidebarData.furnished}
-                onChange={handleChange}
-              />
-              <span>Furnished</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <label className="font-semibold">Sort:</label>
-            <select
-              onChange={handleChange}
-              defaultValue={"created_at_desc"}
-              id="sort_order"
-              className="border rounded-lg p-3"
-            >
-              <option value="regularPrice_desc">Price high to low</option>
-              <option value="regularPrice_asc">Price low to hight</option>
-              <option value="createdAt_desc">Latest</option>
-              <option value="createdAt_asc">Oldest</option>
-            </select>
-          </div>
-          <button className="bg-slate-700 text-white p-3 rounded-lg uppercase hover:opacity-95">
-            Search
-          </button>
-        </form>
-      </div>
-      <div className="flex-1">
-        <h1 className="text-3xl font-semibold border-b p-3 text-slate-700 mt-5">
-          Listing results:
-        </h1>
-      </div>
-      <div className="p-7 flex flex-wrap gap-4">
-        {!loading && listings.length === 0 && (
-          <p className="text-xl text-slate-700">No listing found!</p>
-        )}
-        {loading && (
-          <p className="text-xl text-slate-700 text-center w-full">
-            Loading...
-          </p>
-        )}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      <div className="flex flex-col lg:flex-row max-w-8xl mx-auto">
+        {/* Enhanced Sidebar with Professional Styling */}
+        <div className="lg:w-80 bg-white/80 backdrop-blur-sm border-r border-slate-200/60 shadow-lg">
+          <div className="p-8 border-b border-slate-200/60">
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent mb-6">
+              Search Filters
+            </h2>
 
-        {!loading &&
-          listings &&
-          listings.map((listing) => (
-            <ListingItem key={listing._id} listing={listing} />
-          ))}
+            <form onSubmit={handleSubmit} className="space-y-8">
+              {/* Search Term */}
+              <div className="space-y-3">
+                <label className="block text-sm font-semibold text-slate-700 tracking-wide">
+                  Search Term
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    id="searchTerm"
+                    placeholder="Enter location, property type..."
+                    value={sidebarData.searchTerm}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 bg-white/70 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200 placeholder-slate-400"
+                  />
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                    <svg
+                      className="w-5 h-5 text-slate-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </div>
 
-        {showMore && (
-          <button
-            onClick={onShowMoreClick}
-            className="text-green-700 hover:underline p-7 text-center w-full"
-          >
-            Show more
-          </button>
-        )}
+              {/* Property Type */}
+              <div className="space-y-4">
+                <label className="block text-sm font-semibold text-slate-700 tracking-wide">
+                  Property Type
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { id: "all", label: "All Properties" },
+                    { id: "rent", label: "For Rent" },
+                    { id: "sale", label: "For Sale" },
+                    { id: "offer", label: "Special Offers" },
+                  ].map((type) => (
+                    <label
+                      key={type.id}
+                      className="flex items-center space-x-3 cursor-pointer group"
+                    >
+                      <input
+                        type="checkbox"
+                        id={type.id}
+                        className="w-4 h-4 text-blue-600 bg-white border-slate-300 rounded focus:ring-blue-500 focus:ring-2"
+                        checked={
+                          type.id === "offer"
+                            ? sidebarData.offer
+                            : type.id === "all"
+                            ? sidebarData.type === "all"
+                            : sidebarData.type === type.id
+                        }
+                        onChange={handleChange}
+                      />
+                      <span className="text-sm font-medium text-slate-600 group-hover:text-slate-800 transition-colors">
+                        {type.label}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Amenities */}
+              <div className="space-y-4">
+                <label className="block text-sm font-semibold text-slate-700 tracking-wide">
+                  Amenities
+                </label>
+                <div className="space-y-3">
+                  {[
+                    { id: "parking", label: "Parking Available" },
+                    { id: "furnished", label: "Fully Furnished" },
+                  ].map((amenity) => (
+                    <label
+                      key={amenity.id}
+                      className="flex items-center space-x-3 cursor-pointer group"
+                    >
+                      <input
+                        type="checkbox"
+                        id={amenity.id}
+                        className="w-4 h-4 text-blue-600 bg-white border-slate-300 rounded focus:ring-blue-500 focus:ring-2"
+                        checked={sidebarData[amenity.id]}
+                        onChange={handleChange}
+                      />
+                      <span className="text-sm font-medium text-slate-600 group-hover:text-slate-800 transition-colors">
+                        {amenity.label}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Sort Options */}
+              <div className="space-y-3">
+                <label className="block text-sm font-semibold text-slate-700 tracking-wide">
+                  Sort By
+                </label>
+                <select
+                  onChange={handleChange}
+                  defaultValue="created_at_desc"
+                  id="sort_order"
+                  className="w-full px-4 py-3 bg-white/70 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200 text-slate-700"
+                >
+                  <option value="regularPrice_desc">Price: High to Low</option>
+                  <option value="regularPrice_asc">Price: Low to High</option>
+                  <option value="createdAt_desc">Newest First</option>
+                  <option value="createdAt_asc">Oldest First</option>
+                </select>
+              </div>
+
+              {/* Search Button */}
+              <button
+                type="submit"
+                className=" cursor-pointer w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl"
+              >
+                Search Properties
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <div className="flex-1 min-h-screen">
+          <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 p-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
+                  Property Listings
+                </h1>
+                <p className="text-slate-600 mt-2">
+                  {!loading &&
+                    listings.length > 0 &&
+                    `${listings.length} properties found`}
+                </p>
+              </div>
+              {!loading && listings.length > 0 && (
+                <div className="flex items-center space-x-2 text-sm text-slate-500">
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 6h16M4 10h16M4 14h16M4 18h16"
+                    />
+                  </svg>
+                  <span>Grid View</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Results Content */}
+          <div className="p-2 gap-2">
+            {loading && (
+              <div className="flex flex-col items-center justify-center py-10">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+                <p className="text-lg font-medium text-slate-600">
+                  Searching properties...
+                </p>
+              </div>
+            )}
+
+            {/* No Results */}
+            {!loading && listings.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-20">
+                <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mb-6">
+                  <svg
+                    className="w-12 h-12 text-slate-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-slate-700 mb-2">
+                  No Properties Found
+                </h3>
+                <p className="text-slate-500 text-center max-w-md">
+                  Try adjusting your search criteria or browse all available
+                  properties.
+                </p>
+              </div>
+            )}
+
+            {/* Listings Grid */}
+            {!loading && listings.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 p-4">
+                {listings.map((listing) => (
+                  <div
+                    key={listing._id}
+                    className="group hover:scale-[1.02] transition-transform duration-200"
+                  >
+                    <ListingItem listing={listing} />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Show More Button */}
+            {showMore && (
+              <div className="flex justify-center mt-12">
+                <button
+                  onClick={onShowMoreClick}
+                  className="bg-white/80 backdrop-blur-sm border border-slate-200 hover:border-blue-300 text-slate-700 hover:text-blue-700 font-semibold py-3 px-8 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                >
+                  Load More Properties
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

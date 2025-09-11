@@ -1,55 +1,69 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { useSelector } from 'react-redux'
-import { getStorage } from "firebase/storage";
-import { app } from '../../firebase';
-import { updateUserStart, updateUserSuccess, updateUserFailure, deleteUserFailure, deleteUserStart, deleteUserSuccess, signInFailure, signOutUserStart, signOutUserSuccess } from '../redux/user/userSlice';
-import { useDispatch } from 'react-redux';
-import { Link, useNavigate } from 'react-router-dom';
-import { set } from 'mongoose';
+import React, { useEffect, useRef, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  getStorage,
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+} from "firebase/storage";
+import { app } from "../../firebase";
+import {
+  updateUserStart,
+  updateUserSuccess,
+  updateUserFailure,
+  deleteUserFailure,
+  deleteUserStart,
+  deleteUserSuccess,
+  signInFailure,
+  signOutUserStart,
+  signOutUserSuccess,
+} from "../redux/user/userSlice";
+
 const Profile = () => {
-  const { currentUser, loading, error } = useSelector((state) => state.user)
+  const { currentUser, loading } = useSelector((state) => state.user);
   const fileRef = useRef();
   const [file, setFile] = useState(undefined);
   const [filePerc, setFilePerc] = useState(0);
-  const [fileUploadErrror, setFileUploadErrror] = useState(null);
+  const [fileUploadError, setFileUploadError] = useState(null);
   const [formData, setFormData] = useState({});
-  console.log(formData);
-  const [showListingError, setShowListingError] = useState(false);
   const [userListings, setUserListings] = useState([]);
+  const [showListingError, setShowListingError] = useState(false);
+
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
   useEffect(() => {
     if (file) {
-      handleFileUpload();
+      handleFileUpload(file);
     }
-  }, [file])
+  }, [file]);
 
   const handleFileUpload = (file) => {
     const storage = getStorage(app);
     const fileName = new Date().getTime() + file.name;
     const storageRef = ref(storage, fileName);
     const uploadTask = uploadBytesResumable(storageRef, file);
-    uploadTask.on('state_changed',
+
+    uploadTask.on(
+      "state_changed",
       (snapshot) => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        const progress =
+          (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
         setFilePerc(Math.round(progress));
-        console.log('Upload is ' + progress + '% done');
       },
-      (error) => {
-        setFileUploadErrror(error);
-      },
+      (error) => setFileUploadError(error),
       () => {
         getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-          setFormData(({ ...formData, img: downloadURL }));
+          setFormData((prev) => ({ ...prev, img: downloadURL }));
         });
-      },
+      }
     );
-  }
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
-  }
+  };
 
   // handle user submit
   const handleSubmit = async (e) => {
@@ -72,11 +86,10 @@ const Profile = () => {
       }
       dispatch(updateUserSuccess(data));
       console.log("Update successful:", data);
-
     } catch (error) {
       dispatch(updateUserFailure(error.message));
     }
-  }
+  };
 
   // handle user delete
   const handleDeleteAccount = async (e) => {
@@ -98,18 +111,18 @@ const Profile = () => {
       dispatch(deleteUserSuccess(data));
       console.log("Delete successful:", data);
       navigate("/sign-in", {
-        replace: true
-      })
+        replace: true,
+      });
     } catch (error) {
       dispatch(deleteUserFailure(error.message));
     }
-  }
+  };
 
   // handle user signout
   const handleSignOut = async () => {
     try {
       dispatch(signOutUserStart());
-      const res = await fetch('/api/auth/signout');
+      const res = await fetch("/api/auth/signout");
       const data = await res.json();
       if (res.data === false) {
         dispatch(signInFailure(data.message));
@@ -119,7 +132,7 @@ const Profile = () => {
     } catch (error) {
       dispatch(signInFailure(error.message));
     }
-  }
+  };
 
   // show listing
   const handleShowListing = async () => {
@@ -136,7 +149,7 @@ const Profile = () => {
     } catch (error) {
       setShowListingError(error.message);
     }
-  }
+  };
 
   // handle listing delete
   const handleListingDelete = async (listingId) => {
@@ -157,157 +170,242 @@ const Profile = () => {
     } catch (error) {
       setShowListingError(error.message);
     }
-  }
+  };
 
   return (
-    <div>
-      <h1 className='text-3xl font-bold text-slate-500 text-center '>Profile</h1>
-      <form
-        onSubmit={handleSubmit}
-        className='max-w-md mx-auto mt-8 p-4 border border-gray-300 rounded-lg shadow-md'>
-        <input
-          onChange={(e) => setFile(e.target.files[0])}
-          ref={fileRef}
-          accept='image/*'
-          type="file"
-          className='hidden' />
-        <img
-          onChange={handleFileUpload}
-          onClick={() => fileRef.current.click()}
-          src={currentUser?.img ?
-            currentUser.img
-            : 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png?20150327203541'
-          } alt="Profile" className='w-32 h-32 rounded-full mx-auto mb-4 cursor-pointer' />
-        <p>
-          {
-            fileUploadErrror ? (
-              <span className='text-red-500'>File upload error:(image must be less than 2MB)</span>
-            ) : (
-              filePerc > 0 && filePerc < 100 ? (<span className='text-green-500'>Uploading: {filePerc}%</span>
-              ) : filePerc === 100 ? (
-                <span className='text-green-500'>Upload complete!</span>
-              ) : (
-                ''
-              ))
-          }
-        </p>
-        <div className='mb-4'>
-          <label className='block text-gray-700 text-sm font-bold mb-2' htmlFor='username'>
-            Username
-          </label>
-          <input
-            className='shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline'
-            id='username'
-            type='text'
-            placeholder='Enter your username'
-            defaultValue={currentUser?.userName}
-            onChange={handleChange}
-          />
-        </div>
-        <div className='mb-4'>
-          <label className='block text-gray-700 text-sm font-bold mb-2' htmlFor='email'>
-            Email
-          </label>
-          <input
-            className='shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline'
-            id='email'
-            type='email'
-            placeholder='Enter your email'
-            defaultValue={currentUser?.email}
-            onChange={handleChange}
-          />
-        </div>
-        <div className='mb-4'>
-          <label className='block text-gray-700 text-sm font-bold mb-2' htmlFor='password'>
-            Password
-          </label>
-          <input
-            className='shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline'
-            id='password'
-            type='password'
-            placeholder='Enter your password'
-          />
-        </div>
-        <div className='mb-4'>
-          <button
-            disabled={loading}
-            className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 rounded w-full cursor-pointer'>
-            {loading ? 'Updating...' : 'Update'}
-          </button>
-        </div>
-        <div className='mb-4'>
-          <Link to='/create-listing'>
-            <button
-              disabled={loading}
-              className='bg-green-700 hover:bg-green-800 text-white font-bold py-2 rounded w-full cursor-pointer'>
-              {loading ? 'Creating Listing...' : 'Create Listing'}
-            </button>
-          </Link>
-        </div>
-      </form>
-      <div className='flex justify-between items-center'>
-        <span
-          onClick={handleDeleteAccount}
-          className=' text-red-600 cursor-pointer'>Delete Account</span>
-        <span
-          onClick={handleSignOut}
-          className=' text-red-600 cursor-pointer ml-4'>Signout</span>
-      </div>
-      <div className='flex justify-center'>
-        <button
-          onClick={handleShowListing}
-          className='cursor-pointer text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2'>Show Listing</button>
-      </div>
-      {userListings && userListings.length > 0 && (
-        <div className="flex flex-col gap-6 mt-10">
-          <h1 className="text-center text-3xl font-bold text-slate-800">
-            Your Listings
-          </h1>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-12 px-4">
+      <div className="max-w-5xl mx-auto">
+        {/* Main Profile Card */}
+        <div className="bg-white rounded-3xl shadow-xl border border-slate-200/50 overflow-hidden mb-8">
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-6">
+            <h2 className="text-2xl font-semibold text-white">
+              Profile Information
+            </h2>
+            <p className="text-blue-100 mt-1">
+              Update your personal details and preferences
+            </p>
+          </div>
 
-          {userListings.map((listing) => (
-            <div
-              key={listing._id}
-              className="flex items-center justify-between gap-4 border rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow bg-white"
-            >
-              {/* Image */}
-              <Link to={`/listing/${listing._id}`}>
-                <img
-                  src={listing.imageUrls[0]}
-                  alt="listing cover"
-                  className="h-20 w-20 rounded-xl object-cover border"
-                />
-              </Link>
+          <form onSubmit={handleSubmit} className="p-8 space-y-8">
+            <div className="flex flex-col items-center">
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => setFile(e.target.files[0])}
+              />
+              <div className="relative group">
+                <div className="w-36 h-36 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 p-1">
+                  <img
+                    onClick={() => fileRef.current.click()}
+                    src={
+                      currentUser?.img ||
+                      "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png" ||
+                      "/placeholder.svg"
+                    }
+                    alt="Profile"
+                    className="w-full h-full rounded-full object-cover cursor-pointer transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg"
+                  />
+                </div>
+                <div className="absolute inset-0 rounded-full bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center cursor-pointer">
+                  <span className="text-white text-sm font-medium">
+                    Change Photo
+                  </span>
+                </div>
 
-              {/* Title */}
-              <Link
-                className="text-slate-700 font-semibold text-lg hover:text-blue-600 hover:underline truncate flex-1"
-                to={`/listing/${listing._id}`}
-              >
-                {listing.name}
-              </Link>
-
-              {/* Action Buttons */}
-              <div className="flex flex-col items-center gap-2">
-                <button
-                  onClick={() => handleListingDelete(listing._id)}
-                  className="px-3 py-1 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition"
-                >
-                  Delete
-                </button>
-                <Link to={`/update-listing/${listing._id}`}>
-                  <button
-                    className="px-3 py-1 text-sm font-medium text-green-600 hover:bg-green-50 rounded-lg transition">
-                    Edit
-                  </button>
-                </Link>
+                {/* Upload Status Indicators */}
+                {filePerc > 0 && filePerc < 100 && (
+                  <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white text-xs px-3 py-1 rounded-full shadow-lg">
+                    Uploading {filePerc}%
+                  </div>
+                )}
+                {filePerc === 100 && (
+                  <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-green-600 text-white text-xs px-3 py-1 rounded-full shadow-lg">
+                    Upload Complete!
+                  </div>
+                )}
+                {fileUploadError && (
+                  <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-red-600 text-white text-xs px-3 py-1 rounded-full shadow-lg">
+                    Upload failed. Try smaller image.
+                  </div>
+                )}
               </div>
             </div>
-          ))}
+
+            {/* Professional Form Fields */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="space-y-2">
+                <label
+                  className="block text-sm font-semibold text-slate-700 mb-3"
+                  htmlFor="username"
+                >
+                  Username
+                </label>
+                <input
+                  id="username"
+                  type="text"
+                  defaultValue={currentUser?.userName}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all duration-200 text-slate-900 placeholder-slate-400"
+                  placeholder="Enter your username"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label
+                  className="block text-sm font-semibold text-slate-700 mb-3"
+                  htmlFor="email"
+                >
+                  Email Address
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  defaultValue={currentUser?.email}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all duration-200 text-slate-900 placeholder-slate-400"
+                  placeholder="Enter your email"
+                />
+              </div>
+
+              <div className="lg:col-span-2 space-y-2">
+                <label
+                  className="block text-sm font-semibold text-slate-700 mb-3"
+                  htmlFor="password"
+                >
+                  New Password
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  placeholder="Enter new password (leave blank to keep current)"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all duration-200 text-slate-900 placeholder-slate-400"
+                />
+              </div>
+            </div>
+
+            {/* Professional Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-slate-200">
+              <button
+                disabled={loading}
+                className="cursor-pointer flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-slate-400 disabled:to-slate-500 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <div className="cursor-pointer w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    Updating Profile...
+                  </span>
+                ) : (
+                  "Update Profile"
+                )}
+              </button>
+
+              <Link to="/create-listing" className="flex-1">
+                <button
+                  disabled={loading}
+                  className="cursor-pointer w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:from-slate-400 disabled:to-slate-500 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
+                >
+                  {loading ? "Processing..." : "Create New Listing"}
+                </button>
+              </Link>
+            </div>
+          </form>
         </div>
-      )}
 
+        {/* Account Management Section */}
+        <div className="bg-white rounded-3xl shadow-xl border border-slate-200/50 p-8 mb-8">
+          <h3 className="text-xl font-semibold text-slate-900 mb-6">
+            Account Management
+          </h3>
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="flex gap-4">
+              <button
+                onClick={handleShowListing}
+                className="cursor-pointer px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700   text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
+              >
+                View My Listings
+              </button>
+            </div>
+
+            <div className="flex gap-4">
+              <button
+                onClick={handleSignOut}
+                className="cursor-pointer px-4 py-2 text-slate-600 hover:text-slate-800 font-medium hover:bg-slate-100 rounded-lg transition-colors duration-200"
+              >
+                Sign Out
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                className="cursor-pointer px-4 py-2 text-red-600 hover:text-red-700 font-medium hover:bg-red-50 rounded-lg transition-colors duration-200"
+              >
+                Delete Account
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Enhanced Listings Section */}
+        {userListings && userListings.length > 0 && (
+          <div className="bg-white rounded-3xl shadow-xl border border-slate-200/50 p-8">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-slate-900 mb-2">
+                Your Property Listings
+              </h2>
+              <p className="text-slate-600">
+                Manage and edit your active property listings
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {userListings.map((listing) => (
+                <div
+                  key={listing._id}
+                  className="group bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 hover:border-blue-300 hover:shadow-xl transition-all duration-300"
+                >
+                  <Link to={`/listing/${listing._id}`} className="block">
+                    <div className="aspect-video overflow-hidden">
+                      <img
+                        src={listing.imageUrls[0] || "/placeholder.svg"}
+                        alt="Property listing"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                  </Link>
+
+                  <div className="p-6">
+                    <Link
+                      to={`/listing/${listing._id}`}
+                      className="block font-semibold text-lg text-slate-900 hover:text-blue-600 transition-colors duration-200 mb-4 line-clamp-2"
+                    >
+                      {listing.name}
+                    </Link>
+
+                    <div className="flex gap-3">
+                      <Link
+                        to={`/update-listing/${listing._id}`}
+                        className="flex-1"
+                      >
+                        <button className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200">
+                          Edit
+                        </button>
+                      </Link>
+                      <button
+                        onClick={() => handleListingDelete(listing._id)}
+                        className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-200"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
-  )
-}
+  );
+};
 
-export default Profile
+export default Profile;

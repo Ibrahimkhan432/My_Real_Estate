@@ -2,8 +2,9 @@ import { errorHandler } from "../utils/error.js";
 import bcrypt from "bcryptjs";
 import User from "../models/User.model.js";
 import Listing from "../models/listing.model.js";
+
 export const updateUser = async (req, res, next) => {
-  if (req.params.id !== req.params.id)
+  if (req.user.id !== req.params.id)
     return next(errorHandler(403, "You can update only your account!"));
   try {
     if (req.body.password) {

@@ -5,14 +5,16 @@ export const createListing = async (req, res, next) => {
   try {
     const listing = await Listing.create(req.body);
     res.status(201).json(listing);
-  } catch (error) {}
+  } catch (error) {
+    next(error);
+  }
 };
 
 export const deleteListing = async (req, res, next) => {
   const listing = await Listing.findById(req.params.id);
   if (!listing) return next(errorHandler(404, "Listing not found"));
 
-  if (req.user.id !== listing.useRef)
+  if (req.user.id !== listing.userRef)
     return next(errorHandler(403, "You can delete only your listing"));
 
   try {
@@ -28,7 +30,7 @@ export const updateListing = async (req, res, next) => {
 
   if (!listing) return next(errorHandler(404, "Listing not found"));
 
-  if (req.user.id !== listing.useRef)
+  if (req.user.id !== listing.userRef)
     return next(errorHandler(403, "You can update only your listing"));
 
   try {
@@ -57,35 +59,31 @@ export const getListings = async (req, res, next) => {
   try {
     const limit = parseInt(req.query.limit) || 10;
     const startIndex = parseInt(req.query.startIndex) || 0;
-    let offer = req.query.offer;
 
+    let offer = req.query.offer;
     if (offer === undefined || offer === "false") {
       offer = { $in: [false, true] };
     }
 
     let furnished = req.query.furnished;
-
     if (furnished === undefined || furnished === "false") {
       furnished = { $in: [false, true] };
     }
 
     let parking = req.query.parking;
-
     if (parking === undefined || parking === "false") {
       parking = { $in: [false, true] };
     }
 
     let type = req.query.type;
-
-    if (type === undefined || type === "rent") {
+    if (!type || type === "all") {
       type = { $in: ["rent", "sale"] };
     }
 
     let searchTerm = req.query.searchTerm || "";
 
     const sort = req.query.sort || "createdAt";
-
-    const order = req.query.order || "desc";
+    const order = req.query.order === "asc" ? 1 : -1;
 
     const listings = await Listing.find({
       name: { $regex: searchTerm, $options: "i" },

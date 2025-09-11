@@ -25,7 +25,10 @@ const Listing = () => {
   const [contact, setContact] = useState(false);
 
   const { currentUser } = useSelector((state) => state.user);
-console.log(currentUser._id, listing?.userRef);
+  // console.log(currentUser._id, listing?.userRef);
+  console.log("listing.userRef:", listing?.userRef);
+  console.log("currentUser._id:", currentUser?._id);
+  console.log("Equal?", listing?.userRef === currentUser?._id);
 
   useEffect(() => {
     const fetchListing = async () => {
