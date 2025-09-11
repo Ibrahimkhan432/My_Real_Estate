@@ -26,9 +26,14 @@ const Profile = () => {
   const [file, setFile] = useState(undefined);
   const [filePerc, setFilePerc] = useState(0);
   const [fileUploadError, setFileUploadError] = useState(null);
-  const [formData, setFormData] = useState({});
   const [userListings, setUserListings] = useState([]);
   const [showListingError, setShowListingError] = useState(false);
+  const [formData, setFormData] = useState({
+    userName: currentUser?.userName || "",
+    email: currentUser?.email || "",
+    password: "",
+    img: currentUser?.img || "",
+  });
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -279,6 +284,7 @@ const Profile = () => {
                 <input
                   id="password"
                   type="password"
+                  onChange={handleChange}
                   placeholder="Enter new password (leave blank to keep current)"
                   className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all duration-200 text-slate-900 placeholder-slate-400"
                 />
